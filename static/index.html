@@ -1,0 +1,431 @@
+<!DOCTYPE html>
+<html lang="ja" data-theme="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>とったび ＆ とったび日和 動画検索ナビ</title>
+  <link rel="stylesheet" href="/static/styles.css" />
+</head>
+<body>
+  <!-- Header -->
+  <header class="app-header">
+    <div class="header-inner">
+      <div class="brand" id="brandReset" title="フィルタをリセットしてトップへ">
+        <div class="brand-icon">🚐</div>
+        <div class="brand-text">
+          <h1>とったび ＆ とったび日和 <span class="brand-sub">動画検索ナビ</span></h1>
+          <p class="brand-tagline">撮って 笑って 旅をして ― 全動画・ハネムーンシーズン・47都道府県＆世界マップ検索</p>
+        </div>
+      </div>
+
+      <div class="header-stats" id="headerStats">
+        <div class="stat-pill" title="取得済み全動画数">
+          <span class="stat-label">全動画</span>
+          <strong id="statTotalVideos">-</strong>
+        </div>
+        <div class="stat-pill stat-watched" id="quickFilterWatched" title="クリックで視聴済みを絞り込み">
+          <span class="stat-label">✅ 視聴済み</span>
+          <strong id="statWatchedCount">0</strong>
+        </div>
+        <div class="stat-pill stat-fav" id="quickFilterFav" title="クリックでお気に入りを絞り込み">
+          <span class="stat-label">★ お気に入り</span>
+          <strong id="statFavCount">0</strong>
+        </div>
+        <div class="stat-pill stat-later" id="quickFilterLater" title="クリックで後で見るを絞り込み">
+          <span class="stat-label">🕒 後で見る</span>
+          <strong id="statLaterCount">0</strong>
+        </div>
+      </div>
+
+      <div class="header-actions">
+        <button class="btn btn-sync" id="btnSyncOpen" title="YouTubeから最新動画を取得・更新">
+          <span class="sync-icon" id="syncIcon">🔄</span>
+          <span id="syncBtnText">最新データ同期</span>
+        </button>
+        <button class="btn btn-secondary" id="btnBackupOpen" title="お気に入り・視聴済みデータの保存と復元">
+          💾 データ管理
+        </button>
+        <button class="btn btn-icon" id="btnThemeToggle" title="テーマ切替（ダーク/ライト）">
+          🌙
+        </button>
+      </div>
+    </div>
+
+    <!-- Sync Progress Banner -->
+    <div class="sync-banner hidden" id="syncBanner">
+      <div class="sync-banner-inner">
+        <span id="syncBannerMsg">同期中...</span>
+        <div class="sync-progress-track">
+          <div class="sync-progress-fill" id="syncProgressFill" style="width: 0%"></div>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Navigation Tabs -->
+  <nav class="view-tabs-bar">
+    <div class="view-tabs-inner">
+      <button class="view-tab active" data-view="honeymoon">
+        <span class="tab-emoji">🌏</span>
+        <span>ハネムーン シーズン別</span>
+        <span class="tab-badge" id="tabBadgeHoneymoon">-</span>
+      </button>
+      <button class="view-tab" data-view="map">
+        <span class="tab-emoji">🗾</span>
+        <span>都道府県・世界マップ</span>
+        <span class="tab-badge">47都道府県＋海外</span>
+      </button>
+      <button class="view-tab" data-view="playlists">
+        <span class="tab-emoji">📚</span>
+        <span>シリーズ・再生リスト別</span>
+        <span class="tab-badge" id="tabBadgePlaylists">-</span>
+      </button>
+      <button class="view-tab" data-view="all">
+        <span class="tab-emoji">🎬</span>
+        <span>全動画一覧・検索</span>
+        <span class="tab-badge" id="tabBadgeAll">-</span>
+      </button>
+    </div>
+  </nav>
+
+  <!-- Sticky Search & Filter Control Panel -->
+  <section class="search-panel">
+    <div class="search-panel-inner">
+      <!-- Primary Search Row -->
+      <div class="search-row-main">
+        <div class="search-input-wrap">
+          <span class="search-icon">🔍</span>
+          <input
+            type="text"
+            id="searchInput"
+            placeholder="キーワード検索（例: スイス 登山 / ラーメン 山形 / カッパドキア / あーちゃん日記 / 軽キャン）※スペースでAND検索"
+            autocomplete="off"
+          />
+          <button class="search-clear hidden" id="btnSearchClear" title="検索クリア">✕</button>
+        </div>
+
+        <button class="btn btn-secondary btn-sm mobile-filter-toggle" id="btnMobileFilterToggle" type="button">
+          ⚙️ 絞り込み・並び替え ▼
+        </button>
+
+        <label class="checkbox-pill" title="概要欄（あーちゃん日記・気まぐれ一言・ハッシュタグ）も検索対象にします">
+          <input type="checkbox" id="chkSearchDesc" checked />
+          <span>概要欄・日記も検索</span>
+        </label>
+
+        <!-- Channel Switcher -->
+        <div class="segmented-control" id="channelFilterGroup">
+          <button class="seg-btn active" data-channel="all">すべて</button>
+          <button class="seg-btn" data-channel="tottabi">🚐 とったび</button>
+          <button class="seg-btn" data-channel="tottabi_biyori">☀️ とったび日和</button>
+        </div>
+      </div>
+
+      <!-- Secondary Filters Row -->
+      <div class="search-row-filters" id="searchRowFilters">
+        <div class="filter-group">
+          <label for="filterStatus">状態</label>
+          <select id="filterStatus">
+            <option value="all">すべて表示</option>
+            <option value="unwatched">👀 未視聴のみ</option>
+            <option value="watched">✅ 視聴済みのみ</option>
+            <option value="favorite">★ お気に入りのみ</option>
+            <option value="watch_later">🕒 後で見るのみ</option>
+            <option value="has_note">📝 メモありのみ</option>
+          </select>
+        </div>
+
+        <div class="filter-group">
+          <label for="filterCategory">カテゴリ</label>
+          <select id="filterCategory">
+            <option value="all">全カテゴリ</option>
+          </select>
+        </div>
+
+        <div class="filter-group">
+          <label for="filterSeason">ハネムーン</label>
+          <select id="filterSeason">
+            <option value="all">全シーズン / 指定なし</option>
+          </select>
+        </div>
+
+        <div class="filter-group">
+          <label for="filterLocation">地域・国・都道府県</label>
+          <select id="filterLocation">
+            <option value="all">すべての地域</option>
+          </select>
+        </div>
+
+        <div class="filter-group">
+          <label for="filterYear">公開年</label>
+          <select id="filterYear">
+            <option value="all">全期間</option>
+          </select>
+        </div>
+
+        <div class="filter-group">
+          <label for="filterDuration">長さ</label>
+          <select id="filterDuration">
+            <option value="all">すべて</option>
+            <option value="short_len">〜10分（短め）</option>
+            <option value="medium_len">10分〜25分（通常）</option>
+            <option value="long_len">25分〜60分（長尺）</option>
+            <option value="compilation_len">60分以上（総集編等）</option>
+          </select>
+        </div>
+
+        <div class="filter-group">
+          <label for="sortBy">並び順</label>
+          <select id="sortBy">
+            <option value="date_desc">公開日が新しい順</option>
+            <option value="date_asc">公開日が古い順（第1話〜）</option>
+            <option value="views_desc">再生回数が多い順</option>
+            <option value="duration_desc">動画が長い順</option>
+            <option value="duration_asc">動画が短い順</option>
+          </select>
+        </div>
+
+        <label class="checkbox-pill" title="ショート動画（#shorts）を一覧から除外します">
+          <input type="checkbox" id="chkExcludeShorts" />
+          <span>Shorts除外</span>
+        </label>
+
+        <button class="btn btn-ghost btn-sm" id="btnResetFilters" title="すべての検索条件をクリア">
+          条件クリア
+        </button>
+      </div>
+
+      <!-- Active Filter Chips & Result Summary Bar -->
+      <div class="active-filters-bar" id="activeFiltersBar">
+        <div class="result-summary">
+          該当動画: <strong id="filteredCount">0</strong> 本
+          <span class="result-sub" id="filteredSubInfo"></span>
+        </div>
+        <div class="active-chips" id="activeChips"></div>
+        <div class="layout-switcher" id="layoutSwitcher">
+          <button class="layout-btn active" data-layout="grid" title="カードグリッド表示">⊞ グリッド</button>
+          <button class="layout-btn" data-layout="list" title="コンパクトリスト表示">☰ リスト</button>
+          <button class="layout-btn" data-layout="timeline" title="年月別タイムライン表示">📅 年月別</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Main Content Container -->
+  <main class="main-container">
+    <!-- 1. HONEYMOON SEASONS VIEW -->
+    <section id="viewHoneymoon" class="view-section">
+      <div class="honeymoon-hero">
+        <div class="hm-hero-text">
+          <h2>🌏 ハネムーン（新婚旅行・世界一周）シーズン別ナビ</h2>
+          <p>
+            メインチャンネル「とったび」のハネムーン本編と、同期間にサブチャンネル「とったび日和」で公開された旅の裏側Vlogをシーズンごとに時系列でまとめて探索できます。
+          </p>
+        </div>
+        <div class="hm-hero-controls">
+          <label class="checkbox-pill">
+            <input type="checkbox" id="chkHmIncludeSub" checked />
+            <span>☀️「とったび日和」の同期間・関連動画も一緒に表示</span>
+          </label>
+          <label class="checkbox-pill">
+            <input type="checkbox" id="chkHmChronological" checked />
+            <span>📖 各シーズン内を第1話から時系列順で並べる</span>
+          </label>
+        </div>
+      </div>
+
+      <!-- Quick Season Jump Pills -->
+      <div class="season-jump-bar" id="seasonJumpBar"></div>
+
+      <!-- Season Groups Container -->
+      <div id="honeymoonSeasonsContainer" class="seasons-container"></div>
+    </section>
+
+    <!-- 2. INTERACTIVE MAP & LOCATION VIEW -->
+    <section id="viewMap" class="view-section hidden">
+      <div class="map-mode-Subtabs">
+        <button class="subtab-btn active" data-mapmode="japan">🗾 日本全国47都道府県マップ（日本一周・国内旅）</button>
+        <button class="subtab-btn" data-mapmode="world">🌍 世界各国・海外エリア一覧（ハネムーン・海外旅）</button>
+      </div>
+
+      <!-- Japan 47 Prefectures Interactive Grid Map -->
+      <div id="mapJapanContainer" class="map-panel">
+        <div class="map-panel-header">
+          <div>
+            <h3>🗾 日本47都道府県 インタラクティブマップ</h3>
+            <p>都道府県タイルまたは地方ブロックをクリックすると、その場所で撮影された動画（日本一周旅・車中泊・グルメ旅など）を下に一覧表示します。</p>
+          </div>
+          <div class="map-legend">
+            <span class="legend-item"><i class="dot dot-high"></i>10本以上</span>
+            <span class="legend-item"><i class="dot dot-mid"></i>5〜9本</span>
+            <span class="legend-item"><i class="dot dot-low"></i>1〜4本</span>
+            <button class="btn btn-sm btn-secondary" id="btnClearMapSelection">地域選択を解除</button>
+          </div>
+        </div>
+
+        <div class="japan-map-layout">
+          <!-- Visual Tile Map of Japan -->
+          <div class="japan-tile-map" id="japanTileMap"></div>
+
+          <!-- Region & Prefecture List Sidebar -->
+          <div class="japan-region-list" id="japanRegionList"></div>
+        </div>
+      </div>
+
+      <!-- World Countries Map Panel -->
+      <div id="mapWorldContainer" class="map-panel hidden">
+        <div class="map-panel-header">
+          <div>
+            <h3>🌍 海外訪問国・地域マップ（39カ国・地域）</h3>
+            <p>ハネムーンや海外旅で訪れた国をクリックすると、メイン＆サブチャンネルの該当動画を一覧表示します。</p>
+          </div>
+          <button class="btn btn-sm btn-secondary" id="btnClearWorldSelection">国選択を解除</button>
+        </div>
+        <div id="worldRegionsContainer" class="world-regions-container"></div>
+      </div>
+
+      <!-- Videos filtered by selected location in Map View -->
+      <div class="map-results-section" id="mapResultsSection">
+        <div class="map-results-header">
+          <h3 id="mapResultsTitle">📍 地域を選択するとここに動画が表示されます（全地域表示中）</h3>
+        </div>
+        <div id="mapVideosContainer" class="videos-grid"></div>
+      </div>
+    </section>
+
+    <!-- 3. PLAYLISTS & SERIES VIEW -->
+    <section id="viewPlaylists" class="view-section hidden">
+      <div class="playlists-header">
+        <h2>📚 シリーズ・公式再生リスト別グルーピング</h2>
+        <p>日本一周旅（地方別）、1K家賃3万円の日常、新生活編、中古一軒家DIY、グルメ企画、秘湯・温泉地、とったびラジオなど公式シリーズ別に動画を一覧できます。</p>
+      </div>
+      <div id="playlistsContainer" class="playlists-container"></div>
+    </section>
+
+    <!-- 4. ALL VIDEOS FLAT / TIMELINE VIEW -->
+    <section id="viewAll" class="view-section hidden">
+      <div id="allVideosContainer"></div>
+      <div class="load-more-wrap" id="loadMoreWrap">
+        <button class="btn btn-primary btn-lg" id="btnLoadMore">さらに表示する</button>
+      </div>
+    </section>
+  </main>
+
+  <!-- Video Player & Detail Modal -->
+  <div class="modal-backdrop hidden" id="videoModal">
+    <div class="modal-dialog modal-video">
+      <div class="modal-header">
+        <div class="modal-title-wrap">
+          <span class="channel-badge" id="modalChannelBadge">とったび</span>
+          <h3 id="modalVideoTitle">動画タイトル</h3>
+        </div>
+        <button class="modal-close" id="btnCloseVideoModal" title="閉じる (Esc)">✕</button>
+      </div>
+
+      <div class="modal-body-video">
+        <div class="player-column">
+          <div class="video-Aspect-box" id="modalPlayerBox"></div>
+
+          <div class="modal-action-bar">
+            <div class="modal-user-buttons">
+              <button class="btn-state" id="modalBtnWatched">✅ 視聴済み</button>
+              <button class="btn-state" id="modalBtnFav">★ お気に入り</button>
+              <button class="btn-state" id="modalBtnLater">🕒 後で見る</button>
+            </div>
+            <div class="modal-nav-buttons">
+              <button class="btn btn-sm btn-secondary" id="modalBtnPrev" title="リストの前の動画へ">◀ 前の動画</button>
+              <button class="btn btn-sm btn-secondary" id="modalBtnNext" title="リストの次の動画へ">次の動画 ▶</button>
+              <a class="btn btn-sm btn-youtube" id="modalYoutubeLink" href="#" target="_blank" rel="noopener noreferrer">
+                ↗ YouTubeで開く
+              </a>
+            </div>
+          </div>
+
+          <!-- Personal Note Input -->
+          <div class="modal-note-box">
+            <label for="modalNoteInput">📝 マイメモ（気になったお店・聖地・感想などを保存・検索できます）</label>
+            <div class="note-input-row">
+              <textarea id="modalNoteInput" rows="2" placeholder="例: 行きたいカフェ、12:30〜の絶景スポット最高、など"></textarea>
+              <button class="btn btn-primary btn-sm" id="btnSaveNote">メモ保存</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="detail-column">
+          <div class="modal-meta-row" id="modalMetaRow"></div>
+          <div class="modal-tags-row" id="modalTagsRow"></div>
+          <div class="modal-description-box">
+            <h4>📄 概要欄・あーちゃん日記 / 気まぐれ一言</h4>
+            <div class="modal-description-content" id="modalDescription"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Sync Options Modal -->
+  <div class="modal-backdrop hidden" id="syncModal">
+    <div class="modal-dialog modal-sm">
+      <div class="modal-header">
+        <h3>🔄 YouTube最新データの更新方法（yt-dlp）</h3>
+        <button class="modal-close" id="btnCloseSyncModal">✕</button>
+      </div>
+      <div class="modal-body">
+        <div id="standaloneSyncGuide">
+          <p class="modal-desc" style="margin-bottom: 12px;">
+            このファイル（<code>index.html</code>）は<strong>サーバー不要のスタンドアロン版</strong>です。<br />
+            新しい動画がYouTubeに投稿された際は、フォルダ内の <strong><code>update_videos.command</code></strong> をダブルクリックするか、ターミナルで以下を実行すると最新動画が反映されます（約5〜8秒）：
+          </p>
+          <div class="sync-option-card" style="margin-bottom: 12px;">
+            <h4>💻 ターミナルで更新する場合（高速差分更新）</h4>
+            <div style="display:flex;gap:8px;align-items:center;">
+              <code id="cmdQuickUpdate" style="flex:1;background:var(--bg-surface);padding:8px 10px;border-radius:6px;border:1px solid var(--border-color);font-size:0.82rem;">./update.sh</code>
+              <button class="btn btn-primary btn-sm" id="btnCopyUpdateCmd">コピー</button>
+            </div>
+            <p style="font-size:0.78rem;color:var(--text-muted);margin-top:4px;">
+              ※ Finderから <code>update_videos.command</code> をダブルクリックするだけでも自動更新されます。
+            </p>
+          </div>
+        </div>
+        <div class="sync-options hidden" id="serverSyncControls">
+          <div class="sync-option-card">
+            <h4>⚡ 高速差分同期（おすすめ・約5〜8秒）</h4>
+            <p>新しく投稿された動画の取得と、直近動画の再生回数・再生リストの更新を行います。</p>
+            <button class="btn btn-primary" id="btnRunQuickSync">高速差分同期を実行</button>
+          </div>
+          <div class="sync-option-card">
+            <h4>🔍 全動画フル再取得（約15〜20秒）</h4>
+            <p>過去すべての動画（1,400本以上）の概要欄・再生回数を最初から再取得します。</p>
+            <button class="btn btn-secondary" id="btnRunFullSync">フル再取得を実行</button>
+          </div>
+        </div>
+        <p class="sync-last-updated">現在のデータ取得日時: <strong id="lastUpdatedText">-</strong></p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Backup / Data Management Modal -->
+  <div class="modal-backdrop hidden" id="backupModal">
+    <div class="modal-dialog modal-sm">
+      <div class="modal-header">
+        <h3>💾 お気に入り・視聴済みデータ管理</h3>
+        <button class="modal-close" id="btnCloseBackupModal">✕</button>
+      </div>
+      <div class="modal-body">
+        <p class="modal-desc">
+          視聴済みチェック・お気に入り・後で見る・マイメモは自動的にローカルファイル（<code>data/user_state.json</code>）とブラウザの両方に保存されています。
+        </p>
+        <div class="backup-actions">
+          <button class="btn btn-primary" id="btnExportState">⬇ バックアップJSONをダウンロード</button>
+          <label class="btn btn-secondary file-upload-btn">
+            ⬆ バックアップJSONを読み込む
+            <input type="file" id="inputImportState" accept=".json" hidden />
+          </label>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="/static/app.js"></script>
+</body>
+</html>
