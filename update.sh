@@ -25,5 +25,20 @@ build_analyzed_dataset(raw)
 build_standalone_html()
 "
 
+if git rev-parse --is-inside-work-tree >/dev/null 2>&1; then
+  if ! git diff --quiet index.html; then
+    echo ""
+    echo "🚀 GitHub Pages (https://mataki-stack.github.io/tottabi/) へ変更を反映中..."
+    git add index.html
+    git commit -m "Update video dataset ($(date '+%Y-%m-%d %H:%M'))"
+    git push origin main
+    echo "✨ GitHub Pages へのアップロードが完了しました！"
+  else
+    echo ""
+    echo "ℹ️ 新着動画の変更はありませんでした（GitHub Pages は最新です）。"
+  fi
+fi
+
 echo ""
-echo "✅ 更新が完了しました！ index.html をブラウザで開いてご覧ください。"
+echo "✅ 更新が完了しました！"
+echo "🌐 公開URL: https://mataki-stack.github.io/tottabi/"
