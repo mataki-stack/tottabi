@@ -573,24 +573,47 @@
     const tokens = getSearchTokens(uiState.searchQuery);
     const seasons = dataset.honeymoon_seasons || [];
 
-    // Jump bar
+    // Sticky Season Switcher Bar
     const jumpBar = $("#seasonJumpBar");
-    jumpBar.innerHTML = seasons
-      .map(
-        (s) => `
-        <button class="season-jump-pill" data-jump-season="season-card-${escapeHtml(s.id)}">
-          <span style="color:${escapeHtml(s.badge_color)}">●</span>
-          <span>${escapeHtml(s.title)}</span>
-          <span class="tab-badge">${s.video_count}本</span>
-        </button>
-      `
-      )
-      .join("");
+    const isAllSeasons = uiState.season === "all" || uiState.season === "any_honeymoon";
+    const allPillHtml = `
+      <button class="season-jump-pill ${isAllSeasons ? "active" : ""}" data-select-season="all">
+        <span>🌏 全シーズン表示</span>
+      </button>
+    `;
+    jumpBar.innerHTML =
+      allPillHtml +
+      seasons
+        .map((s) => {
+          const isAct = uiState.season === s.id;
+          return `
+            <button class="season-jump-pill ${isAct ? "active" : ""}" data-select-season="${escapeHtml(s.id)}">
+              <span style="color:${escapeHtml(s.badge_color)}">●</span>
+              <span>${escapeHtml(s.title)}</span>
+              <span class="tab-badge">${s.video_count}本</span>
+            </button>
+          `;
+        })
+        .join("");
 
     jumpBar.querySelectorAll(".season-jump-pill").forEach((btn) => {
       btn.addEventListener("click", () => {
-        const target = document.getElementById(btn.dataset.jumpSeason);
-        if (target) target.scrollIntoView({ behavior: "smooth", block: "start" });
+        const chosen = btn.dataset.selectSeason;
+        if (chosen === "all" || uiState.season === chosen) {
+          uiState.season = "all";
+        } else {
+          uiState.season = chosen;
+        }
+        $("#filterSeason").value = uiState.season;
+        renderHoneymoonView();
+        const anchor = document.getElementById("honeymoonSeasonsContainer");
+        if (anchor) {
+          const panelHeight = ($(".search-panel") && $(".search-panel").offsetHeight) || 120;
+          const topY = anchor.getBoundingClientRect().top + window.scrollY - panelHeight - 12;
+          if (window.scrollY > topY) {
+            window.scrollTo({ top: Math.max(0, topY), behavior: "smooth" });
+          }
+        }
       });
     });
 
@@ -982,6 +1005,9 @@
     $("#viewMap").classList.toggle("hidden", uiState.currentView !== "map");
     $("#viewPlaylists").classList.toggle("hidden", uiState.currentView !== "playlists");
     $("#viewAll").classList.toggle("hidden", uiState.currentView !== "all");
+    if ($("#seasonJumpBar")) {
+      $("#seasonJumpBar").classList.toggle("hidden", uiState.currentView !== "honeymoon");
+    }
 
     if (uiState.currentView === "honeymoon") {
       renderHoneymoonView();

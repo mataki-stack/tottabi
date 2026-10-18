@@ -208,6 +208,9 @@
           <button class="layout-btn" data-layout="timeline" title="年月別タイムライン表示">📅 年月別</button>
         </div>
       </div>
+
+      <!-- Sticky Season Switcher Pills (visible in Honeymoon View) -->
+      <div class="season-jump-bar" id="seasonJumpBar"></div>
     </div>
   </section>
 
@@ -215,7 +218,7 @@
   <main class="main-container">
     <!-- 1. HONEYMOON SEASONS VIEW -->
     <section id="viewHoneymoon" class="view-section">
-      <div class="honeymoon-hero">
+      <div class="honeymoon-hero" id="honeymoonTopAnchor">
         <div class="hm-hero-text">
           <h2>🌏 ハネムーン（新婚旅行・世界一周）シーズン別ナビ</h2>
           <p>
@@ -233,9 +236,6 @@
           </label>
         </div>
       </div>
-
-      <!-- Quick Season Jump Pills -->
-      <div class="season-jump-bar" id="seasonJumpBar"></div>
 
       <!-- Season Groups Container -->
       <div id="honeymoonSeasonsContainer" class="seasons-container"></div>

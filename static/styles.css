@@ -556,31 +556,41 @@ mark.hl {
 
 .season-jump-bar {
   display: flex;
-  gap: 8px;
+  gap: 6px;
   overflow-x: auto;
-  padding-bottom: 10px;
-  margin-bottom: 14px;
+  -webkit-overflow-scrolling: touch;
+  padding-top: 6px;
+  padding-bottom: 2px;
+  border-top: 1px solid var(--border-subtle);
 }
 
 .season-jump-pill {
-  background: var(--bg-surface);
+  background: var(--bg-main);
   border: 1px solid var(--border-color);
   color: var(--text-main);
-  padding: 7px 14px;
+  padding: 5px 12px;
   border-radius: 999px;
-  font-size: 0.82rem;
+  font-size: 0.78rem;
   font-weight: 700;
   cursor: pointer;
   white-space: nowrap;
   display: inline-flex;
   align-items: center;
-  gap: 6px;
+  gap: 5px;
   transition: all 0.15s;
+  flex-shrink: 0;
 }
 
 .season-jump-pill:hover {
   border-color: var(--accent-primary);
   transform: translateY(-1px);
+}
+
+.season-jump-pill.active {
+  background: rgba(56, 189, 248, 0.22);
+  border-color: var(--accent-primary);
+  color: var(--accent-primary);
+  box-shadow: 0 0 0 1px var(--accent-primary);
 }
 
 .seasons-container {
