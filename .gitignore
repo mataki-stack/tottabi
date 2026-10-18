@@ -2,6 +2,5 @@
 __pycache__/
 *.pyc
 .DS_Store
-data/raw_cache.json
 data/videos.json
 data/user_state.json

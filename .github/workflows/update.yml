@@ -1,0 +1,47 @@
+name: Auto Update YouTube Videos
+
+on:
+  schedule:
+    # 毎日 06:00 JST と 21:00 JST (UTC 21:00 / 12:00) に自動実行
+    - cron: "0 12,21 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  update-videos:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v4
+
+      - name: Fetch latest YouTube videos and rebuild index.html
+        run: |
+          uv run python -c "
+          from backend.fetcher import sync_raw_data
+          from backend.analyzer import build_enriched_dataset
+          from build_standalone import build_standalone_html
+
+          def on_prog(msg, cur, tot):
+              print(f'[{cur:3d}%] {msg}', flush=True)
+
+          raw = sync_raw_data(force_full=False, progress_cb=on_prog)
+          build_enriched_dataset(raw)
+          build_standalone_html()
+          "
+
+      - name: Commit and push if updated
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add index.html data/raw_cache.json
+          if ! git diff --staged --quiet; then
+            git commit -m "chore: auto-update YouTube video dataset"
+            git push origin main
+          else
+            echo "No changes to commit."
+          fi

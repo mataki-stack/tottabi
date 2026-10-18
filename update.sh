@@ -13,23 +13,23 @@ echo " 🚐 とったび & とったび日和 最新動画データの取得・�
 echo "=================================================="
 
 "$UV_BIN" run python -c "
-from backend.fetcher import sync_all_channels
-from backend.analyzer import build_analyzed_dataset
+from backend.fetcher import sync_raw_data
+from backend.analyzer import build_enriched_dataset
 from build_standalone import build_standalone_html
 
-def on_prog(msg, pct):
-    print(f'[{pct:3d}%] {msg}')
+def on_prog(msg, cur, tot):
+    print(f'[{cur:3d}%] {msg}', flush=True)
 
-raw = sync_all_channels(progress_callback=on_prog, force_full=False)
-build_analyzed_dataset(raw)
+raw = sync_raw_data(force_full=False, progress_cb=on_prog)
+build_enriched_dataset(raw)
 build_standalone_html()
 "
 
 if git rev-parse --is-inside-work-tree >/dev/null 2>&1; then
-  if ! git diff --quiet index.html; then
+  if ! git diff --quiet index.html data/raw_cache.json; then
     echo ""
     echo "🚀 GitHub Pages (https://mataki-stack.github.io/tottabi/) へ変更を反映中..."
-    git add index.html
+    git add index.html data/raw_cache.json
     git commit -m "Update video dataset ($(date '+%Y-%m-%d %H:%M'))"
     git push origin main
     echo "✨ GitHub Pages へのアップロードが完了しました！"
