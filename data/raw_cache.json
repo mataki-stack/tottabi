@@ -1,5 +1,5 @@
 {
-  "updated_at": "2026-10-25T23:00:39.714222+00:00",
+  "updated_at": "2026-10-26T18:14:17.007448+00:00",
   "videos": {
     "eRdP_BEWjl4": {
       "id": "eRdP_BEWjl4",
@@ -20100,7 +20100,8 @@
         "zRyTvD50fes",
         "m2tDhbzi4KA",
         "GfURTIDROeM",
-        "eRdP_BEWjl4"
+        "eRdP_BEWjl4",
+        "8tzXRCA6Yjc"
       ],
       "items": [
         {
@@ -20822,9 +20823,15 @@
           "title": "【1泊2日】田舎に移住してはじめて外国人の友達をもてなしてみた。",
           "duration": 1624,
           "position": 120
+        },
+        {
+          "id": "8tzXRCA6Yjc",
+          "title": null,
+          "duration": null,
+          "position": 121
         }
       ],
-      "count": 120
+      "count": 121
     },
     {
       "id": "PLFsNadn7fRZ2k5U8Kb1pIc9XuEux7-PlZ",
